@@ -43,6 +43,9 @@ struct Options {
 
   // Hack to fix OpenWRT issues due to dropping of HTTP/2 support from libcurl.
   int use_http_1_1;
+  const char *dns_ip;
+  int mark_sock;
+
 };
 typedef struct Options options_t;
 

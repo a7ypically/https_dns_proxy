@@ -20,6 +20,13 @@ static void sock_cb(struct ev_loop *loop, ev_io *w, int revents) {
 
 static void sock_state_cb(void *data, int fd, int read, int write) {
   dns_poller_t *d = (dns_poller_t *)data;
+
+  if (d->mark && (read || write)) {
+    if (setsockopt(fd, SOL_SOCKET, SO_MARK, &d->mark, sizeof(d->mark)) != 0) {
+      FLOG("Can't set mark(%d) for dns poller.", d->mark);
+    }
+  }
+
   if (!read && !write) {
     ev_io_stop(d->loop, &d->fd[fd]);
     d->fd[fd].fd = 0;
@@ -55,7 +62,7 @@ static void timer_cb(struct ev_loop *loop, ev_timer *w, int revents) {
 
 void dns_poller_init(dns_poller_t *d, struct ev_loop *loop,
                      const char *bootstrap_dns, const char *hostname,
-                     int interval_seconds, dns_poller_cb cb, void *cb_data) {
+                     int mark_sock, int interval_seconds, dns_poller_cb cb, void *cb_data) {
   int i;
   for (i = 0; i < FD_SETSIZE; i++)
     d->fd[i].fd = 0;
@@ -101,6 +108,7 @@ void dns_poller_init(dns_poller_t *d, struct ev_loop *loop,
   d->hostname = hostname;
   d->cb = cb;
   d->cb_data = cb_data;
+  d->mark = mark_sock;
 
   ev_timer_init(&d->timer, timer_cb, 0, interval_seconds);
   d->timer.data = d;

@@ -28,11 +28,13 @@ void options_init(struct Options *opt) {
   opt->bootstrap_dns = "8.8.8.8,8.8.4.4";
   opt->curl_proxy = NULL;
   opt->use_http_1_1 = 0;
+  opt->dns_ip = NULL;
+  opt->mark_sock = 0;
 }
 
 int options_parse_args(struct Options *opt, int argc, char **argv) {
   int c;
-  while ((c = getopt(argc, argv, "a:p:e:du:g:b:t:l:vx")) != -1) {
+  while ((c = getopt(argc, argv, "a:p:e:du:g:b:t:i:l:m:vx")) != -1) {
     switch (c) {
     case 'a': // listen_addr
       opt->listen_addr = optarg;
@@ -58,8 +60,14 @@ int options_parse_args(struct Options *opt, int argc, char **argv) {
     case 't': // curl http proxy
       opt->curl_proxy = optarg;
       break;
+    case 'i':
+      opt->dns_ip = optarg;
+      break;
     case 'l': // logfile
       opt->logfile = optarg;
+      break;
+    case 'm': // mark socket
+      opt->mark_sock = atoi(optarg);
       break;
     case 'v': // verbose
       opt->loglevel--;
@@ -121,8 +129,10 @@ void options_show_usage(int argc, char **argv) {
          defaults.bootstrap_dns);
   printf("  -t proxy_server   Optional HTTP proxy. e.g. socks5://127.0.0.1:1080\n");
   printf("                    (Initial DNS resolution can't be done over this.)\n");
+  printf("  -i dns_ip         Use this IP as dns.google.com\n");
   printf("  -l logfile        Path to file to log to. (%s)\n",
          defaults.logfile);
+  printf("  -m mark           mark socket for netfilter rules\n");
   printf("  -x                Use HTTP/1.1 instead of HTTP/2. Useful with broken\n"
          "                    or limited builds of libcurl (false).\n");
   printf("  -v                Increase logging verbosity. (INFO)\n");

@@ -183,12 +183,21 @@ int main(int argc, char *argv[]) {
   ev_signal_start(loop, &sigint);
 
   dns_poller_t dns_poller;
-  dns_poller_init(&dns_poller, loop, opt.bootstrap_dns, "dns.google.com",
-                  120 /* seconds */, dns_poll_cb, &app.resolv);
+
+  if (opt.dns_ip) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "dns.google.com:443:%s", opt.dns_ip);
+    DLOG("Using dns IP '%s'", opt.dns_ip);
+    curl_slist_free_all(app.resolv);
+    app.resolv = curl_slist_append(NULL, buf);
+  } else {
+    dns_poller_init(&dns_poller, loop, opt.bootstrap_dns, "dns.google.com",
+                    opt.mark_sock, 120 /* seconds */, dns_poll_cb, &app.resolv);
+  }
 
   ev_run(loop, 0);
 
-  dns_poller_cleanup(&dns_poller);
+  if (!opt.dns_ip) dns_poller_cleanup(&dns_poller);
 
   curl_slist_free_all(app.resolv);
 

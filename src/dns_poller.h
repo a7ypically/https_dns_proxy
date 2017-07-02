@@ -11,6 +11,7 @@ typedef struct {
   ares_channel ares;
   struct ev_loop *loop;
   const char *hostname;
+  int mark;
   dns_poller_cb cb;
   void *cb_data;
 
@@ -28,7 +29,7 @@ typedef struct {
 // dns_poller_cleanup called.
 void dns_poller_init(dns_poller_t *d, struct ev_loop *loop,
                      const char *bootstrap_dns, const char *hostname,
-                     int interval_seconds, dns_poller_cb cb, void *cb_data);
+                     int mark_sock, int interval_seconds, dns_poller_cb cb, void *cb_data);
 
 // Tears down timer and frees resources associated with a dns poller.
 void dns_poller_cleanup(dns_poller_t *d);
